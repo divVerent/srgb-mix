@@ -69,17 +69,18 @@ func invert(l lookup2D, pref lookupPref) *tableLookup2D {
 		sy: v1 - v0 + 1,
 	}
 	needX, needY := true, true
-	for i := 0; i < t.sx+t.sy; i++ {
+	stepX, stepY := 1, 1
+	for i := 0; needX || needY; i++ {
 		var spreadX bool
 		switch pref {
 		case xPref:
-			spreadX = i >= t.sy
+			spreadX = !needY
 		case yPref:
-			spreadX = i < t.sx
+			spreadX = needX
 		case xyPref:
-			spreadX = i%2 == 1 && i < 2*t.sx || i >= 2*t.sy
+			spreadX = i%2 == 1
 		case yxPref:
-			spreadX = i%2 == 0 && i < 2*t.sx || i >= 2*t.sy
+			spreadX = i%2 == 0
 		}
 		if spreadX {
 			if !needX {
@@ -87,20 +88,24 @@ func invert(l lookup2D, pref lookupPref) *tableLookup2D {
 			}
 			needX = false
 			for uv, xy := range inverter {
-				if uv.x > u0 {
-					uvm := point{uv.x - 1, uv.y}
+				uvm := point{uv.x - stepX, uv.y}
+				if uvm.x >= u0 {
 					if _, ok := inverter[uvm]; !ok {
 						inverter[uvm] = xy
 						needX = true
 					}
 				}
-				if uv.x < u1 {
-					uvp := point{uv.x + 1, uv.y}
+				uvp := point{uv.x + stepX, uv.y}
+				if uvp.x <= u1 {
 					if _, ok := inverter[uvp]; !ok {
 						inverter[uvp] = xy
 						needX = true
 					}
 				}
+			}
+			stepX *= 2
+			if stepX >= t.sx {
+				needX = false
 			}
 		} else {
 			if !needY {
@@ -108,20 +113,24 @@ func invert(l lookup2D, pref lookupPref) *tableLookup2D {
 			}
 			needY = false
 			for uv, xy := range inverter {
-				if uv.y > v0 {
-					uvm := point{uv.x, uv.y - 1}
+				uvm := point{uv.x, uv.y - stepY}
+				if uvm.y >= v0 {
 					if _, ok := inverter[uvm]; !ok {
 						inverter[uvm] = xy
 						needY = true
 					}
 				}
-				if uv.y < v1 {
-					uvp := point{uv.x, uv.y + 1}
+				uvp := point{uv.x, uv.y + stepY}
+				if uvp.y <= v1 {
 					if _, ok := inverter[uvp]; !ok {
 						inverter[uvp] = xy
 						needY = true
 					}
 				}
+			}
+			stepY *= 2
+			if stepY >= t.sy {
+				needY = false
 			}
 		}
 		/*
