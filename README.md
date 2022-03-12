@@ -1,6 +1,8 @@
 # srgb-mix
 
-Tool to create pictures that show one thing when scaled sRGB-compliantly and another thing when not
+Tool to create pictures that show one thing when scaled sRGB-compliantly and another thing when not.
+
+This can be used for creating test images for sRGB-correct scaling, or "hidden messages" in images that are hidden in thumbnails but show in large views or vice versa, depending on which scaling algorithm each use. Direct 1:1 pixel display on a monitor can be assumed to be sRGB here, however on HiDPI monitors, some scaling usually takes place and has to be factored in.
 
 ## Samples
 
