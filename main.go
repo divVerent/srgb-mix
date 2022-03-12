@@ -38,7 +38,6 @@ import (
 	"io"
 	"log"
 	"math"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -147,95 +146,4 @@ func perturb(sRGB, linear image.Image, out *image.NRGBA64) {
 			out.SetNRGBA64(x, y, color.NRGBA64{R: oR, G: oG, B: oB, A: uint16(oA)})
 		}
 	}
-}
-
-func clamp(x uint32) uint16 {
-	if x > 65535 {
-		return 65535
-	}
-	return uint16(x)
-}
-
-// TODO(divVerent): Rather use a lookup table? Needs changing to 0..255 color values then.
-// TODO(divVerent): Also have a mode that puts more weight on l (to "hide" something that is invisible in thumbnail)?
-
-func perturbOne(x, y int, s, l, dMax uint32) uint32 {
-	// Move the target color.
-	var t uint32
-	if *goal {
-		if dMax < s && l < s-dMax {
-			t = s - dMax
-		} else {
-			t = l
-		}
-	} else {
-		d := dMax * (65535 - l) / 65535
-		if d < s {
-			t = s - d
-		} else {
-			t = 0
-		}
-	}
-
-	if t >= s {
-		// Filter can't change anything as this op can only darken.
-		return s
-	}
-
-	// Requirements:
-	// - colors a and b.
-	// - sRGB-correct scaling of block should yield s.
-	// - Linear scaling should get as close as possible to t.
-	// I.e. solve:
-	//   (a + b) / 2 close to t
-	//   (s2l(a) + s2l(b)) / 2 = s2l(s)
-	// Solution: binary search for now.
-
-	ss := s2l(s)
-	sdMin := 0.0
-	sdMax := math.Min(ss, 1-ss)
-	a, b := s, s
-	for sdMax-sdMin > 1e-8 {
-		sd := (sdMax + sdMin) / 2
-		sa := ss - sd
-		sb := ss + sd
-		a = l2s(sa)
-		b = l2s(sb)
-		if a+b < 2*t {
-			sdMax = sd
-		} else {
-			sdMin = sd
-		}
-	}
-
-	var r bool
-	if *random {
-		r = rand.Intn(2) == 1
-	} else {
-		r = (x^y)&1 == 1
-	}
-	if r {
-		return b
-	}
-	return a
-}
-
-func s2l(x uint32) float64 {
-	f := float64(x) / 65535
-	if f <= 0.04045 {
-		return f / 12.92
-	}
-	return math.Pow((f+0.055)/1.055, 2.4)
-}
-
-func l2sf(x float64) float64 {
-	if x <= 0.0031308 {
-		return x * 12.92
-	}
-	return 1.055*math.Pow(x, 1/2.4) - 0.055
-}
-
-func l2s(x float64) uint32 {
-	f := l2sf(x)
-	return uint32(math.RoundToEven(f * 65535))
 }
