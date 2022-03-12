@@ -11,42 +11,31 @@ The left thumbnail assumes stupid linear scaling, the right thumbnail was scaled
 
 As a bonus, play with your browser's page zoom (Ctrl-Plus and Ctrl-Minus) and see if you can get the other one.
 
-### darken_l
+### -preference ls
 
-Here, the linear image is a darkening overlay to be shown when scaling/blurring assuming linear color values:
+This mode does not consider one of the images strictly more important than the other, but tries to build an image where both color values are fulfilled as closely as possible.
 
-```
-go run . -in_linear in/flag.png -in_srgb in/clouds.png -out out/darken_l.png -strength 1 -mode darken_l
-```
-
-[![darken_l](out/darken_l.png)](out/darken_l.png)
-
-[![linear thumbnail](thumbnails/darken_l-linear.png)](thumbnails/darken_l-linear.png)
-[![sRGB thumbnail](thumbnails/darken_l-srgb.png)](thumbnails/darken_l-srgb.png)
-
-Note that this changes nothing where the `in_linear` image is white, and brightens most where the `in_linear` image is black.
-
-### lighten_s
-
-Here, the sRGB image is a brightening overlay to be shown when scaling/blurring assuming sRGB color values:
+Should not be used in conjunction with `-strength`, and the `-mode` needs to be either `mix_s` or `mix_l` (default), which do the same when `-strength` is unset.
 
 ```
-go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/lighten_s.png -strength 1 -mode lighten_s
+go run . -in_linear in/linear.png -in_srgb in/srgb.png -out out/pref_ls.png -preference ls
 ```
 
-[![lighten_s](out/lighten_s.png)](out/lighten_s.png)
+[![pref_ls](out/pref_ls.png)](out/pref_ls.png)
 
-[![linear thumbnail](thumbnails/lighten_s-linear.png)](thumbnails/lighten_s-linear.png)
-[![sRGB thumbnail](thumbnails/lighten_s-srgb.png)](thumbnails/lighten_s-srgb.png)
+[![linear thumbnail](thumbnails/pref_ls-linear.png)](thumbnails/pref_ls-linear.png)
+[![sRGB thumbnail](thumbnails/pref_ls-srgb.png)](thumbnails/pref_ls-srgb.png)
 
-Note that this changes nothing where the `in_srgb` image is black, and brightens most where the `in_srgb` image is white.
+Note that this only works where the `in_linear` image is darker than the `in_srgb` one, and it cannot be much darker.
 
-### mix_l
+### -mode mix_l
+
+This is the default mode, as it is usually most useful.
 
 Here, the linear image is a target to be shown when scaling/blurring assuming linear color values, and setting the strength reduces its influence:
 
 ```
-go run . -in_linear in/flag.png -in_srgb in/clouds.png -out out/mix_l.png -strength 1 -mode mix_l
+go run . -in_linear in/flag.png -in_srgb in/clouds.png -out out/mix_l.png -strength 0.5 -mode mix_l
 ```
 
 [![mix_l](out/mix_l.png)](out/mix_l.png)
@@ -56,12 +45,12 @@ go run . -in_linear in/flag.png -in_srgb in/clouds.png -out out/mix_l.png -stren
 
 Note that this only works where the `in_linear` image is darker than the `in_srgb` one.
 
-### mix_s
+### -mode mix_s
 
 Here, the sRGB image is a target to be shown when scaling/blurring assuming sRGB color values, and setting the strength reduces its influence:
 
 ```
-go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/mix_s.png -strength 1 -mode mix_s
+go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/mix_s.png -strength 0.5 -mode mix_s
 ```
 
 [![mix_s](out/mix_s.png)](out/mix_s.png)
@@ -71,22 +60,35 @@ go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/mix_s.png -stren
 
 Note that this only works where the `in_srgb` image is brighter than the `in_linear` one.
 
-### -preference ls
+### -mode darken_l
 
-This mode does not consider one of the images strictly more important than the other, but tries to build an image where both color values are fulfilled as closely as possible.
-
-Should not be used in conjunction with `-strength`, and the `-mode` needs to be either `mix_s` or `mix_l`, which do the same when `-strength` is unset.
+Here, the linear image is a darkening overlay to be shown when scaling/blurring assuming linear color values:
 
 ```
-go run . -in_linear in/linear.png -in_srgb in/srgb.png -out out/pref_ls.png -mode mix_s -preference ls
+go run . -in_linear in/flag.png -in_srgb in/clouds.png -out out/darken_l.png -strength 0.5 -mode darken_l
 ```
 
-[![pref_ls](out/pref_ls.png)](out/pref_ls.png)
+[![darken_l](out/darken_l.png)](out/darken_l.png)
 
-[![linear thumbnail](thumbnails/pref_ls-linear.png)](thumbnails/pref_ls-linear.png)
-[![sRGB thumbnail](thumbnails/pref_ls-srgb.png)](thumbnails/pref_ls-srgb.png)
+[![linear thumbnail](thumbnails/darken_l-linear.png)](thumbnails/darken_l-linear.png)
+[![sRGB thumbnail](thumbnails/darken_l-srgb.png)](thumbnails/darken_l-srgb.png)
 
-Note that this only works where the `in_linear` image is darker than the `in_srgb` one, and it cannot be much darker.
+Note that this changes nothing where the `in_linear` image is white, and brightens most where the `in_linear` image is black.
+
+### -mode lighten_s
+
+Here, the sRGB image is a brightening overlay to be shown when scaling/blurring assuming sRGB color values:
+
+```
+go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/lighten_s.png -strength 0.5 -mode lighten_s
+```
+
+[![lighten_s](out/lighten_s.png)](out/lighten_s.png)
+
+[![linear thumbnail](thumbnails/lighten_s-linear.png)](thumbnails/lighten_s-linear.png)
+[![sRGB thumbnail](thumbnails/lighten_s-srgb.png)](thumbnails/lighten_s-srgb.png)
+
+Note that this changes nothing where the `in_srgb` image is black, and brightens most where the `in_srgb` image is white.
 
 ### Note
 
