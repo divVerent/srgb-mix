@@ -26,26 +26,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package main
 
-import (
-	"math"
-)
-
-func s2l(x int) float64 {
-	f := float64(x) / 255
-	if f <= 0.04045 {
-		return f / 12.92
-	}
-	return math.Pow((f+0.055)/1.055, 2.4)
+type lookup2D interface {
+	Range() (x0, x1, y0, y1 int)
+	Lookup(x, y int) (u, v int, ok bool)
 }
 
-func l2sf(x float64) float64 {
-	if x <= 0.0031308 {
-		return x * 12.92
-	}
-	return 1.055*math.Pow(x, 1/2.4) - 0.055
+type point struct {
+	x, y int
 }
 
-func l2s(x float64) int {
-	f := l2sf(x)
-	return int(math.RoundToEven(f * 255))
+type tableLookup2D struct {
+	x0, sx, y0, sy int
+	data           []point
+}
+
+func (t *tableLookup2D) Range() (int, int, int, int) {
+	return t.x0, t.x0 + t.sx - 1, t.y0, t.y0 + t.sy - 1
+}
+
+func (t *tableLookup2D) Lookup(x, y int) (u, v int, ok bool) {
+	if x < t.x0 {
+		return 0, 0, false
+	}
+	rx := x - t.x0
+	if rx >= t.sx {
+		return 0, 0, false
+	}
+	if y < t.y0 {
+		return 0, 0, false
+	}
+	ry := y - t.y0
+	if ry >= t.sy {
+		return 0, 0, false
+	}
+	p := t.data[rx+t.sx*ry]
+	return p.x, p.y, true
+}
+
+func (t *tableLookup2D) makeData() {
+	t.data = make([]point, t.sx*t.sy)
+}
+
+func (t *tableLookup2D) setAt(x, y, u, v int) {
+	rx := x - t.x0
+	ry := y - t.y0
+	t.data[rx+t.sx*ry] = point{u, v}
 }

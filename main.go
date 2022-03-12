@@ -44,12 +44,13 @@ import (
 )
 
 var (
-	inSRGB   = flag.String("in_srgb", "", "sRGB input image")
-	inLinear = flag.String("in_linear", "", "linear input image")
-	out      = flag.String("out", "", "output image")
-	random   = flag.Bool("random", false, "use a random pattern")
-	strength = flag.Float64("strength", 1.0, "filter strength")
-	goal     = flag.Bool("goal", false, "linear texture is goal color (not delta from white)")
+	inSRGB     = flag.String("in_srgb", "", "sRGB input image")
+	inLinear   = flag.String("in_linear", "", "linear input image")
+	out        = flag.String("out", "", "output image")
+	random     = flag.Bool("random", false, "use a random pattern")
+	strength   = flag.Float64("strength", 1.0, "filter strength")
+	preference = flag.String("preference", "auto", "importance of sRGB vs linear image (auto/s/l/sl/ls)")
+	mode       = flag.String("mode", "darken_l", "filter mode: darken_l/lighten_s/ mix_l/mix_s")
 )
 
 func loadImage(name string) (image.Image, error) {
@@ -121,13 +122,46 @@ func main() {
 }
 
 func perturb(sRGB, linear image.Image, out *image.NRGBA64) {
-	dMax := uint32(math.RoundToEven(*strength * 65535))
+	var pref lookupPref
+	var mod filterMode
+	switch *mode {
+	case "darken_l":
+		pref = yPref
+		mod = darkenL
+	case "lighten_s":
+		pref = xPref
+		mod = lightenS
+	case "mix_l":
+		pref = yPref
+		mod = mixL
+	case "mix_s":
+		pref = xPref
+		mod = mixS
+	default:
+		log.Fatalf("--mode must be darken_l, lighten_s, mix_l or mix_s")
+	}
+	switch *preference {
+	case "l":
+		pref = xPref
+	case "s":
+		pref = yPref
+	case "ls":
+		pref = xyPref
+	case "sl":
+		pref = yxPref
+	case "auto":
+		// keep
+	default:
+		log.Fatalf("--preference must be auto, l, s, ls or sl")
+	}
+	p := newPerturber(pref)
+	strength := int(math.RoundToEven(*strength * 255))
 	bounds := out.Bounds()
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			sR, sG, sB, sA := sRGB.At(x, y).RGBA()
 			lR, lG, lB, lA := linear.At(x, y).RGBA()
-			var onR, onG, onB uint32
+			var oR, oG, oB uint32
 			oA := (sA*lA + 32767) / 65535
 			if oA != 0 {
 				snR := (sR*65535 + sA/2) / sA
@@ -136,14 +170,11 @@ func perturb(sRGB, linear image.Image, out *image.NRGBA64) {
 				lnR := (lR*65535 + lA/2) / lA
 				lnG := (lG*65535 + lA/2) / lA
 				lnB := (lB*65535 + lA/2) / lA
-				onR = perturbOne(x, y, snR, lnR, dMax)
-				onG = perturbOne(x, y, snG, lnG, dMax)
-				onB = perturbOne(x, y, snB, lnB, dMax)
+				oR = p.perturbOne(x, y, snR, lnR, strength, mod)
+				oG = p.perturbOne(x, y, snG, lnG, strength, mod)
+				oB = p.perturbOne(x, y, snB, lnB, strength, mod)
 			}
-			oR := clamp(onR)
-			oG := clamp(onG)
-			oB := clamp(onB)
-			out.SetNRGBA64(x, y, color.NRGBA64{R: oR, G: oG, B: oB, A: uint16(oA)})
+			out.SetNRGBA64(x, y, color.NRGBA64{R: uint16(oR), G: uint16(oG), B: uint16(oB), A: uint16(oA)})
 		}
 	}
 }

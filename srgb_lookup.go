@@ -26,26 +26,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package main
 
-import (
-	"math"
-)
+type sRGBLookup2D struct{}
 
-func s2l(x int) float64 {
-	f := float64(x) / 255
-	if f <= 0.04045 {
-		return f / 12.92
-	}
-	return math.Pow((f+0.055)/1.055, 2.4)
+func (s *sRGBLookup2D) Range() (x0, x1, y0, y1 int) {
+	return 0, 0, 255, 255
 }
 
-func l2sf(x float64) float64 {
-	if x <= 0.0031308 {
-		return x * 12.92
+func (s *sRGBLookup2D) Lookup(x, y int) (u, v int, ok bool) {
+	sum := x + y
+	if sum&3 == 3 {
+		sum++ // Round to even.
 	}
-	return 1.055*math.Pow(x, 1/2.4) - 0.055
-}
-
-func l2s(x float64) int {
-	f := l2sf(x)
-	return int(math.RoundToEven(f * 255))
+	return sum >> 1, l2s((s2l(x) + s2l(y)) / 2), true
 }

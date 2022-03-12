@@ -24,71 +24,61 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// srgbmix.go - a program to mix two images so that one normally sees one image, but when scaling sees another.
 package main
 
 import (
-	"math"
+	"log"
 	"math/rand"
 )
 
-func clamp(x uint32) uint16 {
-	if x > 65535 {
-		return 65535
-	}
-	return uint16(x)
+type filterMode int
+
+const (
+	darkenL filterMode = iota
+	lightenS
+	mixL
+	mixS
+)
+
+type perturber struct {
+	l *tableLookup2D
 }
 
-// TODO(divVerent): Rather use a lookup table? Needs changing to 0..255 color values then.
-// TODO(divVerent): Also have a mode that puts more weight on l (to "hide" something that is invisible in thumbnail)?
+func newPerturber(pref lookupPref) *perturber {
+	forward := &sRGBLookup2D{}
+	inverse := invert(forward, pref)
+	return &perturber{
+		l: inverse,
+	}
+}
 
-func perturbOne(x, y int, s, l, dMax uint32) uint32 {
-	// Move the target color.
-	var t uint32
-	if *goal {
-		if dMax < s && l < s-dMax {
-			t = s - dMax
-		} else {
-			t = l
+func (p *perturber) perturbOne(x, y int, s, l uint32, strength int, mode filterMode) uint32 {
+	// Think in 8bit colors.
+	s8 := int((s + 128) / 257)
+	l8 := int((l + 128) / 257)
+
+	// Adjust transform strength.
+	switch mode {
+	case darkenL:
+		l8 = s8 - (strength*(255-l8)+127)/255
+		if l8 < 0 {
+			l8 = 0
 		}
-	} else {
-		d := dMax * (65535 - l) / 65535
-		if d < s {
-			t = s - d
-		} else {
-			t = 0
+	case lightenS:
+		s8 = l8 + (strength*s8+127)/255
+		if s8 > 255 {
+			s8 = 255
 		}
+	case mixL:
+		l8 = (s8*(255-strength) + l8*strength + 127) / 255
+	case mixS:
+		s8 = (l8*(255-strength) + s8*strength + 127) / 255
 	}
 
-	if t >= s {
-		// Filter can't change anything as this op can only darken.
-		return s
-	}
-
-	// Requirements:
-	// - colors a and b.
-	// - sRGB-correct scaling of block should yield s.
-	// - Linear scaling should get as close as possible to t.
-	// I.e. solve:
-	//   (a + b) / 2 close to t
-	//   (s2l(a) + s2l(b)) / 2 = s2l(s)
-	// Solution: binary search for now.
-
-	ss := s2l(s)
-	sdMin := 0.0
-	sdMax := math.Min(ss, 1-ss)
-	a, b := s, s
-	for sdMax-sdMin > 1e-8 {
-		sd := (sdMax + sdMin) / 2
-		sa := ss - sd
-		sb := ss + sd
-		a = l2s(sa)
-		b = l2s(sb)
-		if a+b < 2*t {
-			sdMax = sd
-		} else {
-			sdMin = sd
-		}
+	// Get color pair.
+	a, b, ok := p.l.Lookup(l8, s8)
+	if !ok {
+		log.Fatalf("unreachable code: failed lookup for %v, %v", s8, l8)
 	}
 
 	var r bool
@@ -98,7 +88,7 @@ func perturbOne(x, y int, s, l, dMax uint32) uint32 {
 		r = (x^y)&1 == 1
 	}
 	if r {
-		return b
+		return uint32(b * 257)
 	}
-	return a
+	return uint32(a * 257)
 }
