@@ -84,7 +84,7 @@ go run . -in_linear in/linear.png -in_srgb in/srgb.png -out out/pref_ls.png -mod
 [![pref_ls](out/pref_ls.png)](out/pref_ls.png)
 
 [![linear thumbnail](thumbnails/pref_ls-linear.png)](thumbnails/pref_ls-linear.png)
-[![sRGB thumbnail](thumbnails/pref_ls-srgb.png)](thumbnails/pref_ls-srgb.png)pref_ls
+[![sRGB thumbnail](thumbnails/pref_ls-srgb.png)](thumbnails/pref_ls-srgb.png)
 
 Note that this only works where the `in_linear` image is darker than the `in_srgb` one, and it cannot be much darker.
 
