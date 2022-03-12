@@ -16,6 +16,9 @@ go run . -in_linear in/flag.png -in_srgb in/clouds.png -out out/darken_l.png -st
 
 [![darken_l](out/darken_l.png)](out/darken_l.png)
 
+[![linear thumbnail](thumbnails/darken_l-linear.png)](thumbnails/darken_l-linear.png)
+[![sRGB thumbnail](thumbnails/darken_l-srgb.png)](thumbnails/darken_l-srgb.png)
+
 ### lighten_s
 
 Here, the sRGB image is a brightening overlay to be shown when scaling/blurring assuming sRGB color values:
@@ -25,6 +28,9 @@ go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/lighten_s.png -s
 ```
 
 [![lighten_s](out/lighten_s.png)](out/lighten_s.png)
+
+[![linear thumbnail](thumbnails/lighten_s-linear.png)](thumbnails/lighten_s-linear.png)
+[![sRGB thumbnail](thumbnails/lighten_s-srgb.png)](thumbnails/lighten_s-srgb.png)
 
 ### mix_l
 
@@ -36,6 +42,9 @@ go run . -in_linear in/flag.png -in_srgb in/clouds.png -out out/mix_l.png -stren
 
 [![mix_l](out/mix_l.png)](out/mix_l.png)
 
+[![linear thumbnail](thumbnails/mix_l-linear.png)](thumbnails/mix_l-linear.png)
+[![sRGB thumbnail](thumbnails/mix_l-srgb.png)](thumbnails/mix_l-srgb.png)
+
 ### mix_s
 
 Here, the sRGB image is a target to be shown when scaling/blurring assuming sRGB color values, and setting the strength reduces its influence:
@@ -46,3 +55,17 @@ go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/mix_s.png -stren
 
 [![mix_s](out/mix_s.png)](out/mix_s.png)
 
+[![linear thumbnail](thumbnails/mix_t-linear.png)](thumbnails/mix_t-linear.png)
+[![sRGB thumbnail](thumbnails/mix_t-srgb.png)](thumbnails/mix_t-srgb.png)
+
+### Note
+
+Thumbnails were generated with:
+
+```
+cd out
+for x in *.png; do
+	convert "$x" -geometry 50% "../thumbnails/${x%.png}-linear.png"
+	convert "$x" -colorspace RGB -geometry 50% -colorspace sRGB "../thumbnails/${x%.png}-srgb.png"
+done
+```
