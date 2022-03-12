@@ -26,10 +26,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package main
 
-import (
-	"log"
-)
-
 type lookupPref int
 
 const (
@@ -89,7 +85,6 @@ func invert(l lookup2D, pref lookupPref) *tableLookup2D {
 			if !needX {
 				continue
 			}
-			log.Printf("spreading x")
 			needX = false
 			for uv, xy := range inverter {
 				if uv.x > u0 {
@@ -111,7 +106,6 @@ func invert(l lookup2D, pref lookupPref) *tableLookup2D {
 			if !needY {
 				continue
 			}
-			log.Printf("spreading y")
 			needY = false
 			for uv, xy := range inverter {
 				if uv.y > v0 {
