@@ -51,6 +51,7 @@ var (
 	strength   = flag.Float64("strength", 1.0, "filter strength")
 	preference = flag.String("preference", "auto", "importance of sRGB vs linear image (auto/s/l/sl/ls)")
 	mode       = flag.String("mode", "darken_l", "filter mode: darken_l/lighten_s/ mix_l/mix_s")
+	pick       = flag.String("pick", "farthest", "pick mode: closest/farthest/darkest/lightest/random")
 )
 
 func loadImage(name string) (image.Image, error) {
@@ -154,7 +155,22 @@ func perturb(sRGB, linear image.Image, out *image.NRGBA64) {
 	default:
 		log.Fatalf("--preference must be auto, l, s, ls or sl")
 	}
-	p := newPerturber(pref)
+	var pic lookupPick
+	switch *pick {
+	case "closest":
+		pic = closestPick
+	case "farthest":
+		pic = farthestPick
+	case "darkest":
+		pic = farthestPick | darkestPick
+	case "lightest":
+		pic = farthestPick | lightestPick
+	case "random":
+		pic = randomPick
+	default:
+		log.Fatalf("--pick must be closest, farthest, dark, light or random")
+	}
+	p := newPerturber(pref, pic)
 	strength := int(math.RoundToEven(*strength * 255))
 	bounds := out.Bounds()
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {

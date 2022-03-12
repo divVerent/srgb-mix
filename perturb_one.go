@@ -44,9 +44,9 @@ type perturber struct {
 	l *tableLookup2D
 }
 
-func newPerturber(pref lookupPref) *perturber {
+func newPerturber(pref lookupPref, pick lookupPick) *perturber {
 	forward := &sRGBLookup2D{}
-	inverse := invert(forward, pref)
+	inverse := invert(forward, pref, pick)
 	return &perturber{
 		l: inverse,
 	}

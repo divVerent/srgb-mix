@@ -26,6 +26,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package main
 
+import (
+	"log"
+	"math"
+	"math/rand"
+)
+
 type lookupPref int
 
 const (
@@ -35,8 +41,18 @@ const (
 	yxPref
 )
 
-func invert(l lookup2D, pref lookupPref) *tableLookup2D {
-	inverter := map[point]point{}
+type lookupPick int
+
+const (
+	randomPick   lookupPick = 1
+	closestPick             = 2
+	farthestPick            = 4
+	darkestPick             = 8
+	lightestPick            = 16
+)
+
+func invert(l lookup2D, pref lookupPref, pick lookupPick) *tableLookup2D {
+	inverterList := map[point][]point{}
 	x0, y0, x1, y1 := l.Range()
 	var u0, u1, v0, v1 int
 	first := true
@@ -46,7 +62,8 @@ func invert(l lookup2D, pref lookupPref) *tableLookup2D {
 			if !ok {
 				continue
 			}
-			inverter[point{u, v}] = point{x, y}
+			p := point{u, v}
+			inverterList[p] = append(inverterList[p], point{x, y})
 			if first || u < u0 {
 				u0 = u
 			}
@@ -67,6 +84,49 @@ func invert(l lookup2D, pref lookupPref) *tableLookup2D {
 		sx: u1 - u0 + 1,
 		y0: v0,
 		sy: v1 - v0 + 1,
+	}
+	inverter := make(map[point]point, len(inverterList))
+	for uv, xys := range inverterList {
+		bestScore := math.MaxInt
+		candidates := make([]point, 0, len(xys))
+		for _, p := range xys {
+			score := 0
+			if pick&(closestPick|farthestPick) != 0 {
+				s := 2 * (p.x - p.y)
+				if s < 0 {
+					s = -s
+					s-- // As arbitrary tie breaker, consider x<y "closer".
+				}
+				if pick&farthestPick != 0 {
+					s = -s
+				}
+				score += s
+			}
+			if pick&(darkestPick|lightestPick) != 0 {
+				s := p.x*256 + p.y
+				if s < 0 {
+					s = -s
+				}
+				if pick&lightestPick != 0 {
+					s = -s
+				}
+				score += s * 1024
+			}
+			if score < bestScore {
+				bestScore = score
+				candidates = append(candidates[:0], p)
+			} else if score == bestScore {
+				candidates = append(candidates, p)
+			}
+		}
+		if pick&randomPick != 0 {
+			inverter[uv] = candidates[rand.Intn(len(candidates))]
+		} else {
+			if len(candidates) != 1 {
+				log.Fatalf("random picking not allowed and more than one candidate remaining: %v", candidates)
+			}
+			inverter[uv] = candidates[0]
+		}
 	}
 	needX, needY := true, true
 	stepX, stepY := 1, 1
