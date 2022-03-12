@@ -34,10 +34,10 @@ import (
 type filterMode int
 
 const (
-	darkenL filterMode = iota
-	lightenS
-	mixL
+	mixL filterMode = iota
 	mixS
+	darkenL
+	lightenS
 )
 
 type perturber struct {

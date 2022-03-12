@@ -50,7 +50,7 @@ var (
 	random     = flag.Bool("random", false, "use a random pattern")
 	strength   = flag.Float64("strength", 1.0, "filter strength")
 	preference = flag.String("preference", "auto", "importance of sRGB vs linear image (auto/s/l/sl/ls)")
-	mode       = flag.String("mode", "darken_l", "filter mode: darken_l/lighten_s/ mix_l/mix_s")
+	mode       = flag.String("mode", "mix_l", "filter mode: mix_l/mix_s/darken_l/lighten_s")
 	pick       = flag.String("pick", "farthest", "pick mode: closest/farthest/darkest/lightest/random")
 )
 
@@ -126,18 +126,18 @@ func perturb(sRGB, linear image.Image, out *image.NRGBA64) {
 	var pref lookupPref
 	var mod filterMode
 	switch *mode {
-	case "darken_l":
-		pref = yPref
-		mod = darkenL
-	case "lighten_s":
-		pref = xPref
-		mod = lightenS
 	case "mix_l":
 		pref = yPref
 		mod = mixL
 	case "mix_s":
 		pref = xPref
 		mod = mixS
+	case "darken_l":
+		pref = yPref
+		mod = darkenL
+	case "lighten_s":
+		pref = xPref
+		mod = lightenS
 	default:
 		log.Fatalf("--mode must be darken_l, lighten_s, mix_l or mix_s")
 	}
