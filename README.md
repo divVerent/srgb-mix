@@ -6,6 +6,11 @@ This can be used for creating test images for sRGB-correct scaling, or "hidden m
 
 ## Samples
 
+Find out which of the two thumbnails the big image looks like for you in each of these!
+The left thumbnail assumes stupid linear scaling, the right thumbnail was scaled sRGB-correctly.
+
+As a bonus, play with your browser's page zoom (Ctrl-Plus and Ctrl-Minus) and see if you can get the other one.
+
 ### darken_l
 
 Here, the linear image is a darkening overlay to be shown when scaling/blurring assuming linear color values:
