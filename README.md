@@ -55,8 +55,8 @@ go run . -in_linear in/clouds.png -in_srgb in/flag.png -out out/mix_s.png -stren
 
 [![mix_s](out/mix_s.png)](out/mix_s.png)
 
-[![linear thumbnail](thumbnails/mix_t-linear.png)](thumbnails/mix_t-linear.png)
-[![sRGB thumbnail](thumbnails/mix_t-srgb.png)](thumbnails/mix_t-srgb.png)
+[![linear thumbnail](thumbnails/mix_s-linear.png)](thumbnails/mix_s-linear.png)
+[![sRGB thumbnail](thumbnails/mix_s-srgb.png)](thumbnails/mix_s-srgb.png)
 
 ### Note
 
